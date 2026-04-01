@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Axios NPM Supply Chain Attack — March 31, 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;600;700&family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a28;
+    --red: #ff2d55;
+    --red-glow: rgba(255, 45, 85, 0.3);
+    --orange: #ff9500;
+    --green: #30d158;
+    --blue: #0a84ff;
+    --purple: #bf5af2;
+    --cyan: #64d2ff;
+    --yellow: #ffd60a;
+    --text: #e5e5ea;
+    --dim: #8e8e93;
+    --border: rgba(255,255,255,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 50%, rgba(255,45,85,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 30%, rgba(10,132,255,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(191,90,242,0.05) 0%, transparent 50%);
+    animation: drift 20s ease-in-out infinite;
+  }
+
+  @keyframes drift {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(-2%, 1%) rotate(1deg); }
+    66% { transform: translate(1%, -1%) rotate(-0.5deg); }
+  }
+
+  .hero-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--red);
+    background: rgba(255,45,85,0.1);
+    border: 1px solid rgba(255,45,85,0.2);
+    padding: 0.4rem 1.2rem;
+    border-radius: 100px;
+    margin-bottom: 2rem;
+    position: relative;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero-label::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--red);
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.6rem;
+    animation: blink 1.5s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  .hero h1 {
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    font-weight: 900;
+    line-height: 1.05;
+    position: relative;
+    animation: fadeUp 0.8s 0.2s ease both;
+    letter-spacing: -0.03em;
+  }
+
+  .hero h1 span { color: var(--red); }
+
+  .hero-sub {
+    font-size: 1.15rem;
+    color: var(--dim);
+    max-width: 600px;
+    margin-top: 1.5rem;
+    position: relative;
+    animation: fadeUp 0.8s 0.4s ease both;
+    font-weight: 300;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 2rem;
+    margin-top: 3rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    position: relative;
+    animation: fadeUp 0.8s 0.6s ease both;
+  }
+
+  .stat {
+    text-align: center;
+    padding: 1rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    min-width: 140px;
+  }
+
+  .stat-num {
+    font-size: 1.8rem;
+    font-weight: 900;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.25rem;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    animation: fadeUp 0.8s 1s ease both, bob 2s ease-in-out infinite;
+    color: var(--dim);
+    font-size: 0.8rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+  }
+
+  /* SECTIONS */
+  section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem;
+  }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 0.75rem;
+  }
+
+  section h2 {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  section p {
+    color: var(--dim);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    max-width: 700px;
+    font-weight: 300;
+  }
+
+  /* TIMELINE */
+  .timeline {
+    position: relative;
+    margin: 3rem 0;
+    padding-left: 2.5rem;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--red), var(--purple), var(--blue), var(--green));
+    border-radius: 2px;
+  }
+
+  .tl-item {
+    position: relative;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.6s ease;
+  }
+
+  .tl-item.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .tl-item::before {
+    content: '';
+    position: absolute;
+    left: -2.5rem;
+    top: 6px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 3px solid var(--red);
+    background: var(--bg);
+    z-index: 1;
+  }
+
+  .tl-item:nth-child(2)::before { border-color: var(--orange); }
+  .tl-item:nth-child(3)::before { border-color: var(--purple); }
+  .tl-item:nth-child(4)::before { border-color: var(--blue); }
+  .tl-item:nth-child(5)::before { border-color: var(--cyan); }
+  .tl-item:nth-child(6)::before { border-color: var(--green); }
+
+  .tl-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--yellow);
+    margin-bottom: 0.3rem;
+  }
+
+  .tl-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .tl-desc {
+    color: var(--dim);
+    font-size: 0.85rem;
+    font-weight: 300;
+  }
+
+  /* ATTACK FLOW ANIMATION */
+  .attack-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 3rem 0;
+    position: relative;
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.2rem;
+    padding: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    position: relative;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 0.5s ease;
+    margin-bottom: 0.5rem;
+  }
+
+  .flow-step.active {
+    opacity: 1;
+    transform: scale(1);
+    border-color: var(--red);
+    box-shadow: 0 0 30px var(--red-glow);
+  }
+
+  .flow-step.done {
+    opacity: 0.5;
+    transform: scale(0.97);
+    border-color: var(--border);
+    box-shadow: none;
+  }
+
+  .flow-step.pending {
+    opacity: 0.3;
+    transform: scale(0.95);
+  }
+
+  .flow-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+
+  .flow-step:nth-child(1) .flow-icon { background: rgba(255,45,85,0.15); }
+  .flow-step:nth-child(2) .flow-icon { background: rgba(255,149,0,0.15); }
+  .flow-step:nth-child(3) .flow-icon { background: rgba(191,90,242,0.15); }
+  .flow-step:nth-child(4) .flow-icon { background: rgba(10,132,255,0.15); }
+  .flow-step:nth-child(5) .flow-icon { background: rgba(100,210,255,0.15); }
+  .flow-step:nth-child(6) .flow-icon { background: rgba(48,209,88,0.15); }
+  .flow-step:nth-child(7) .flow-icon { background: rgba(255,214,10,0.15); }
+
+  .flow-connector {
+    width: 2px;
+    height: 24px;
+    background: linear-gradient(to bottom, rgba(255,45,85,0.4), rgba(255,45,85,0.1));
+    margin: 0 auto;
+    border-radius: 2px;
+  }
+
+  .flow-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .flow-desc {
+    color: var(--dim);
+    font-size: 0.82rem;
+    font-weight: 300;
+  }
+
+  .flow-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    background: rgba(0,0,0,0.4);
+    color: var(--cyan);
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    margin-top: 0.6rem;
+    overflow-x: auto;
+    border: 1px solid rgba(100,210,255,0.1);
+  }
+
+  /* PLAY BUTTON */
+  .play-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 2rem;
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: 100px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 2rem;
+  }
+
+  .play-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--red-glow);
+  }
+
+  .play-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* IOC TABLE */
+  .ioc-grid {
+    display: grid;
+    gap: 0.75rem;
+    margin: 2rem 0;
+  }
+
+  .ioc-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    transition: all 0.3s ease;
+  }
+
+  .ioc-row:hover { border-color: var(--red); }
+
+  .ioc-type {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+
+  .ioc-type.domain { background: rgba(255,45,85,0.15); color: var(--red); }
+  .ioc-type.ip { background: rgba(255,149,0,0.15); color: var(--orange); }
+  .ioc-type.pkg { background: rgba(191,90,242,0.15); color: var(--purple); }
+  .ioc-type.hash { background: rgba(10,132,255,0.15); color: var(--blue); }
+  .ioc-type.email { background: rgba(100,210,255,0.15); color: var(--cyan); }
+
+  .ioc-val { color: var(--text); word-break: break-all; }
+
+  /* AI TOOLS SECTION */
+  .tool-card {
+    padding: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .tool-card:hover { border-color: var(--purple); }
+
+  .tool-card h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .tool-card p {
+    font-size: 0.85rem;
+    color: var(--dim);
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .tag-offensive { background: rgba(255,45,85,0.15); color: var(--red); }
+  .tag-recon { background: rgba(255,149,0,0.15); color: var(--orange); }
+  .tag-ai { background: rgba(191,90,242,0.15); color: var(--purple); }
+
+  /* DEFENSE SECTION */
+  .defense-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+
+  .defense-card {
+    padding: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+  }
+
+  .defense-card:hover { border-color: var(--green); }
+
+  .defense-card h3 {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .defense-card p {
+    font-size: 0.82rem;
+    font-weight: 300;
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--dim);
+    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    border-top: 1px solid var(--border);
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    margin: 1rem 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">Active Threat Advisory — March 31, 2026</div>
+  <h1>The <span>Axios</span> NPM<br>Supply Chain Attack</h1>
+  <p class="hero-sub">A North Korea-linked threat actor hijacked the most popular HTTP library in JavaScript to deploy a cross-platform RAT to millions of developers worldwide.</p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num" style="color:var(--red)">~100M</div>
+      <div class="stat-label">Weekly Downloads</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" style="color:var(--orange)">2h 53m</div>
+      <div class="stat-label">Exposure Window</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" style="color:var(--purple)">3</div>
+      <div class="stat-label">OS Platforms Hit</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" style="color:var(--cyan)">135+</div>
+      <div class="stat-label">Confirmed Endpoints</div>
+    </div>
+  </div>
+  <div class="scroll-hint">↓ scroll to explore</div>
+</div>
+
+<!-- TIMELINE -->
+<section>
+  <div class="section-label">01 — Timeline</div>
+  <h2>How It Unfolded (UTC)</h2>
+  <p>The entire attack was planned, staged, and executed in under 24 hours — targeting a Sunday night maintenance window to maximize dwell time before detection.</p>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-time">Mar 30 — ~06:00 UTC (T-18h)</div>
+      <div class="tl-title">Staging: plain-crypto-js@4.2.0 published</div>
+      <div class="tl-desc">Attacker creates a clean decoy package mimicking the legitimate <code>crypto-js</code> library. Version 4.2.0 is benign — designed to build npm registry history and avoid suspicion.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-time">Mar 31 — 00:21 UTC</div>
+      <div class="tl-title">Compromise: axios@1.14.1 published</div>
+      <div class="tl-desc">Using a stolen long-lived npm token, the attacker hijacks the maintainer account, changes the email to a ProtonMail address, and publishes a malicious release tagged "latest." Bypasses all CI/CD pipelines.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-time">Mar 31 — ~00:30 UTC</div>
+      <div class="tl-title">Payload: plain-crypto-js@4.2.1 goes live</div>
+      <div class="tl-desc">The weaponized dependency is published — contains the obfuscated dropper (setup.js) that triggers via npm's postinstall hook on every <code>npm install</code>.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-time">Mar 31 — 01:00 UTC</div>
+      <div class="tl-title">Legacy branch: axios@0.30.4 published</div>
+      <div class="tl-desc">Attacker also poisons the "legacy" dist-tag, maximizing blast radius across projects on both current and legacy Axios APIs.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-time">Mar 31 — ~01:50 UTC</div>
+      <div class="tl-title">Detection: Security researchers raise alarm</div>
+      <div class="tl-desc">StepSecurity, Elastic, and Huntress detect anomalous C2 traffic. Elastic files a GitHub Security Advisory. Community alerts begin spreading on social media.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-time">Mar 31 — 03:15 UTC</div>
+      <div class="tl-title">Takedown: npm pulls malicious packages</div>
+      <div class="tl-desc">Both poisoned Axios releases and plain-crypto-js are removed from the registry. Safe versions (1.14.0 and 0.30.3) are restored as latest. C2 infrastructure goes offline.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ATTACK CHAIN ANIMATION -->
+<section>
+  <div class="section-label">02 — Attack Chain</div>
+  <h2>Step-by-Step Kill Chain</h2>
+  <p>Click play to watch the attack unfold stage by stage. This is the exact technical sequence from account takeover to RAT deployment.</p>
+
+  <button class="play-btn" id="playBtn" onclick="startAnimation()">▶ Play Attack Simulation</button>
+
+  <div class="attack-flow" id="attackFlow">
+    <div class="flow-step pending" data-step="0">
+      <div class="flow-icon">🔑</div>
+      <div>
+        <div class="flow-title">1. Credential Theft</div>
+        <div class="flow-desc">Attacker obtains a long-lived npm access token for the <strong>jasonsaayman</strong> maintainer account. Changes associated email to <code>ifstap@proton.me</code> to lock out the real owner.</div>
+      </div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step pending" data-step="1">
+      <div class="flow-icon">📦</div>
+      <div>
+        <div class="flow-title">2. Malicious Dependency Injection</div>
+        <div class="flow-desc">A new dependency <code>plain-crypto-js@^4.2.1</code> is added to <code>package.json</code>. It's never imported in Axios source — it only exists to trigger its postinstall hook.</div>
+        <div class="flow-code">"dependencies": { "plain-crypto-js": "^4.2.1" }</div>
+      </div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step pending" data-step="2">
+      <div class="flow-icon">⚡</div>
+      <div>
+        <div class="flow-title">3. Postinstall Hook Fires</div>
+        <div class="flow-desc">When anyone runs <code>npm install</code>, npm automatically executes <code>setup.js</code> from plain-crypto-js. No user interaction needed — just installing triggers the payload.</div>
+        <div class="flow-code">"scripts": { "postinstall": "node setup.js" }</div>
+      </div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step pending" data-step="3">
+      <div class="flow-icon">🔍</div>
+      <div>
+        <div class="flow-title">4. OS Detection (SILKBELL)</div>
+        <div class="flow-desc">The obfuscated dropper (<code>setup.js</code> / SILKBELL) checks <code>process.platform</code> to determine if the target is Windows, macOS, or Linux — then downloads the matching stage-2 binary from <code>sfrclak[.]com:8000</code>.</div>
+      </div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step pending" data-step="4">
+      <div class="flow-icon">🦠</div>
+      <div>
+        <div class="flow-title">5. RAT Deployment (WAVESHAPER.V2)</div>
+        <div class="flow-desc">Platform-specific RAT binaries are dropped: <strong>wt.exe</strong> (Windows), <strong>macWebT</strong> (macOS), or Linux variant. All share identical C2 protocol, command structure, and beacon behavior — a unified cross-platform implant.</div>
+      </div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step pending" data-step="5">
+      <div class="flow-icon">📡</div>
+      <div>
+        <div class="flow-title">6. C2 Beacon & Exfiltration</div>
+        <div class="flow-desc">The RAT beacons to <code>142.11.206.73</code> using POST requests disguised as npm registry traffic (to <code>packages.npm.org</code> — actually a domain owned by the National Association of Pastoral Musicians since 1997). Supports remote shell, file upload/download, and credential harvesting.</div>
+      </div>
+    </div>
+    <div class="flow-connector"></div>
+    <div class="flow-step pending" data-step="6">
+      <div class="flow-icon">🧹</div>
+      <div>
+        <div class="flow-title">7. Anti-Forensics Cleanup</div>
+        <div class="flow-desc">After execution, the dropper replaces <code>plain-crypto-js/package.json</code> with a clean version — no postinstall script, no setup.js. Running <code>npm audit</code> afterward shows nothing. The compromise is invisible.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- IOCs -->
+<section>
+  <div class="section-label">03 — Indicators of Compromise</div>
+  <h2>IOC Reference</h2>
+  <p>Check your lockfiles and network logs for these indicators. If any are present, treat the machine as fully compromised.</p>
+
+  <div class="ioc-grid">
+    <div class="ioc-row">
+      <span class="ioc-type pkg">PKG</span>
+      <span class="ioc-val">axios@1.14.1 (malicious — tagged latest)</span>
+    </div>
+    <div class="ioc-row">
+      <span class="ioc-type pkg">PKG</span>
+      <span class="ioc-val">axios@0.30.4 (malicious — tagged legacy)</span>
+    </div>
+    <div class="ioc-row">
+      <span class="ioc-type pkg">PKG</span>
+      <span class="ioc-val">plain-crypto-js@4.2.1 (payload vehicle)</span>
+    </div>
+    <div class="ioc-row">
+      <span class="ioc-type domain">C2</span>
+      <span class="ioc-val">sfrclak[.]com:8000</span>
+    </div>
+    <div class="ioc-row">
+      <span class="ioc-type ip">IP</span>
+      <span class="ioc-val">142.11.206.73</span>
+    </div>
+    <div class="ioc-row">
+      <span class="ioc-type email">EMAIL</span>
+      <span class="ioc-val">ifstap@proton[.]me (hijacked acct)</span>
+    </div>
+    <div class="ioc-row">
+      <span class="ioc-type hash">SHA256</span>
+      <span class="ioc-val">e10b1fa84f1d6481625f741b69892780140d4e0e7769e7491e5f4d894c2e0e09</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- AI & HACKER TOOLS -->
+<section>
+  <div class="section-label">04 — AI in Modern Attacks</div>
+  <h2>How Hackers Leverage AI & Automation</h2>
+  <p>This attack specifically is attributed to North Korean state actors (UNC1069 / BlueNoroff). But here's how AI and automated tooling are accelerating supply chain attacks across the board in 2026.</p>
+
+  <div class="tool-card">
+    <h3>🤖 hackerbot-claw <span class="tag tag-ai">AI BOT</span></h3>
+    <p>An autonomous AI-powered bot discovered in Feb 2026, scanning public GitHub repos for exploitable CI/CD workflows. It opens innocent-looking pull requests (typo fixes) while hiding payloads in branch names and CI scripts. Harvests Personal Access Tokens and developer secrets at scale.</p>
+  </div>
+
+  <div class="tool-card">
+    <h3>🕵️ AI-Powered Credential Discovery <span class="tag tag-recon">RECON</span></h3>
+    <p>Malware like QUIETVAULT uses AI/ML analysis to discover secrets on compromised systems — distinguishing test credentials from production keys, prioritizing high-value targets for deeper penetration. Context-aware exfiltration, not just blind scraping.</p>
+  </div>
+
+  <div class="tool-card">
+    <h3>🔓 TruffleHog (Weaponized) <span class="tag tag-offensive">OFFENSIVE</span></h3>
+    <p>Originally a legitimate secret-scanning tool, TeamPCP was observed using TruffleHog within hours of stealing credentials to validate and triage stolen secrets, then conducting automated recon across AWS services (IAM, EC2, Lambda, S3, Secrets Manager).</p>
+  </div>
+
+  <div class="tool-card">
+    <h3>🎭 LLM-Assisted Social Engineering <span class="tag tag-ai">AI</span></h3>
+    <p>North Korean groups use LLMs to generate synthetic identities, manipulate images, and produce fluent cross-language communications — enabling fake IT worker schemes, convincing phishing campaigns, and maintainer impersonation at scale.</p>
+  </div>
+
+  <div class="tool-card">
+    <h3>⚡ AI Vulnerability Scanners <span class="tag tag-recon">RECON</span></h3>
+    <p>Attackers use AI to rapidly scan public-facing applications for misconfigurations and missing auth controls. IBM's 2026 X-Force Index reported a 44% increase in attacks starting with exploited public apps, driven partly by AI-enabled vulnerability discovery.</p>
+  </div>
+
+  <div class="tool-card">
+    <h3>🧬 Polymorphic AI Malware <span class="tag tag-offensive">OFFENSIVE</span></h3>
+    <p>Next-gen malware rewrites itself in real-time using AI to avoid signature-based detection. Changes behavior when it suspects sandbox analysis. Unlike traditional malware, these variants are nearly impossible to fingerprint.</p>
+  </div>
+
+  <div class="tool-card">
+    <h3>🌐 Underground AI Markets <span class="tag tag-ai">AI</span></h3>
+    <p>An expanding underground market sells premium AI platform credentials — stolen ChatGPT, Copilot, and cloud AI accounts. IBM found 300,000+ ChatGPT credentials exposed by infostealers in 2025 alone. These accounts are used to automate attack planning and code generation.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- DEFENSES -->
+<section>
+  <div class="section-label">05 — Defense</div>
+  <h2>How to Protect Yourself</h2>
+
+  <div class="defense-grid">
+    <div class="defense-card">
+      <h3>🔒 Pin Dependencies</h3>
+      <p>Never use floating version ranges like <code>^1.14.0</code>. Pin exact versions in lockfiles. The attack only worked because <code>npm install</code> auto-resolved to the malicious latest.</p>
+    </div>
+    <div class="defense-card">
+      <h3>🚫 Disable postinstall</h3>
+      <p>Use <code>--ignore-scripts</code> in CI/CD, or switch to pnpm which blocks lifecycle scripts by default. This single setting would have prevented the dropper from executing.</p>
+    </div>
+    <div class="defense-card">
+      <h3>🔐 Short-Lived Tokens</h3>
+      <p>The attacker used a long-lived npm access token. Migrate to short-lived, scoped automation tokens and require OIDC provenance for publishing.</p>
+    </div>
+    <div class="defense-card">
+      <h3>✅ Verify Provenance</h3>
+      <p>Legitimate Axios releases include SLSA build attestations linking to a specific GitHub Actions run. The malicious versions had none — absence of provenance should trigger alerts.</p>
+    </div>
+    <div class="defense-card">
+      <h3>🛡️ Supply Chain Firewalls</h3>
+      <p>Tools like Datadog's SCFW, Socket, or Snyk wrap <code>npm install</code> to automatically block known malicious packages before they execute.</p>
+    </div>
+    <div class="defense-card">
+      <h3>🔄 Rotate Everything</h3>
+      <p>If exposed: npm tokens, AWS keys, SSH keys, cloud creds, CI/CD secrets, and .env values. The RAT supported full credential harvesting — assume everything was exfiltrated.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Compiled from Google GTIG, Elastic Security Labs, Huntress, Datadog, SANS, Sophos, Malwarebytes, and Sonatype reports.<br>
+  Built for educational cybersecurity study — April 2026
+</footer>
+
+<script>
+  // Timeline scroll animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.2 });
+
+  document.querySelectorAll('.tl-item').forEach(item => observer.observe(item));
+
+  // Attack chain animation
+  let animating = false;
+  function startAnimation() {
+    if (animating) return;
+    animating = true;
+    const btn = document.getElementById('playBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Simulating...';
+
+    const steps = document.querySelectorAll('.flow-step');
+    steps.forEach(s => { s.className = 'flow-step pending'; });
+
+    let i = 0;
+    function nextStep() {
+      if (i > 0) steps[i - 1].className = 'flow-step done';
+      if (i < steps.length) {
+        steps[i].className = 'flow-step active';
+        steps[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        i++;
+        setTimeout(nextStep, 2200);
+      } else {
+        animating = false;
+        btn.disabled = false;
+        btn.textContent = '↻ Replay Attack Simulation';
+      }
+    }
+    nextStep();
+  }
+</script>
+
+</body>
+</html>
